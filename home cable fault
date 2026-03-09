@@ -1,0 +1,49 @@
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+from twilio.rest import Client
+
+# Twilio credentials (replace with your actual credentials)
+TWILIO_ACCOUNT_SID = 'your_account_sid'
+TWILIO_AUTH_TOKEN = 'your_auth_token'
+TWILIO_PHONE_NUMBER = '+1234567890'
+YOUR_PHONE_NUMBER = '+91xxxxxxxxxx'
+
+# Load or simulate voltage data
+def get_voltage_data():
+    # Simulated voltage readings
+    voltage_readings = [230, 240, 245, 150, 148, 260, 235, 238, 249, 252]
+    df = pd.DataFrame(voltage_readings, columns=['Voltage'])
+    return df
+
+# Train anomaly detection model
+def train_model(data):
+    model = IsolationForest(contamination=0.1)
+    model.fit(data)
+    return model
+
+# Send SMS alert
+def send_alert(voltage):
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    message = f"Voltage anomaly detected: {voltage}V"
+    client.messages.create(
+        body=message,
+        from_=TWILIO_PHONE_NUMBER,
+        to=YOUR_PHONE_NUMBER
+    )
+    print("Alert sent:", message)
+
+# Main monitoring loop
+def monitor_voltage():
+    data = get_voltage_data()
+    model = train_model(data)
+
+    for voltage in data['Voltage']:
+        if voltage < 150 or voltage > 250:
+            send_alert(voltage)
+        else:
+            prediction = model.predict([[voltage]])
+            if prediction[0] == -1:
+                send_alert(voltage)
+
+if _name_ == "_main_":
+    monitor_volta
